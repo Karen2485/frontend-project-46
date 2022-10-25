@@ -1,23 +1,37 @@
-import path from 'path';
+import { expect } from '@jest/globals';
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'url';
 import genDiff from '../src/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const getFixturePath = (filename) => path.join(__dirname, '..', '__fixtures__', filename);
+const __dirname = dirname(__filename);
 
-const first = getFixturePath('file1.json');
-const second = getFixturePath('file2.json');
+const getFixturePath = (filename) => resolve(__dirname, '..', '__fixtures__', filename);
+const readFixture = (filename) => readFileSync(getFixturePath(filename), 'utf-8');
 
-const expected = `{
-  - follow: false
-    host: hexlet.io
-  - proxy: 123.234.53.22
-  - timeout: 50
-  + timeout: 20
-  + verbose: true
-}`;
+const stylishResult = readFixture('stylishResult.txt');
+// const plainResult = readFixture('plainResult.txt');
+// const jsonResult = readFixture('jsonResult.txt');
 
-test('difference test 1', () => {
-  expect(genDiff(first, second)).toEqual(expected);
+describe('genDiff test', () => {
+  it('should be work with yml', () => {
+    const filePath1 = getFixturePath('file1.yaml');
+    const filePath2 = getFixturePath('file2.yaml');
+    expect(genDiff(filePath1, filePath2)).toEqual(stylishResult);
+    expect(genDiff(filePath1, filePath2, 'stylish')).toEqual(stylishResult);
+    // expect(genDiff(filePath1, filePath2, 'plain')).toEqual(plainResult);
+    // expect(genDiff(filePath1, filePath2, 'json')).toEqual(jsonResult);
+  });
+
+  it('should be work with json', () => {
+    const filePath1 = getFixturePath('file1.json');
+    const filePath2 = getFixturePath('file2.json');
+
+    expect(genDiff(filePath1, filePath2)).toEqual(stylishResult);
+    expect(genDiff(filePath1, filePath2, 'stylish')).toEqual(stylishResult);
+    // expect(genDiff(filePath1, filePath2, 'plain')).toEqual(plainResult);
+    // expect(genDiff(filePath1, filePath2, 'json')).toEqual(jsonResult);
+    // expect(() => genDiff(getFixturePath('error.json'), filePath1)).toThrow(SyntaxError);
+  });
 });
