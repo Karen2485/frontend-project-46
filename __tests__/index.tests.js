@@ -11,7 +11,7 @@ const getFixturePath = (filename) => resolve(__dirname, '..', '__fixtures__', fi
 const readFixture = (filename) => readFileSync(getFixturePath(filename), 'utf-8');
 
 const stylishResult = readFixture('stylishResult.txt');
-// const plainResult = readFixture('plainResult.txt');
+const plainResult = readFixture('plainResult.txt');
 // const jsonResult = readFixture('jsonResult.txt');
 
 describe('genDiff test', () => {
@@ -20,7 +20,7 @@ describe('genDiff test', () => {
     const filePath2 = getFixturePath('file2.yaml');
     expect(genDiff(filePath1, filePath2)).toEqual(stylishResult);
     expect(genDiff(filePath1, filePath2, 'stylish')).toEqual(stylishResult);
-    // expect(genDiff(filePath1, filePath2, 'plain')).toEqual(plainResult);
+    expect(genDiff(filePath1, filePath2, 'plain')).toEqual(plainResult);
     // expect(genDiff(filePath1, filePath2, 'json')).toEqual(jsonResult);
   });
 
@@ -30,7 +30,7 @@ describe('genDiff test', () => {
 
     expect(genDiff(filePath1, filePath2)).toEqual(stylishResult);
     expect(genDiff(filePath1, filePath2, 'stylish')).toEqual(stylishResult);
-    // expect(genDiff(filePath1, filePath2, 'plain')).toEqual(plainResult);
+    expect(genDiff(filePath1, filePath2, 'plain')).toEqual(plainResult);
     // expect(genDiff(filePath1, filePath2, 'json')).toEqual(jsonResult);
     // expect(() => genDiff(getFixturePath('error.json'), filePath1)).toThrow(SyntaxError);
   });
