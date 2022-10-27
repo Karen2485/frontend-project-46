@@ -4,25 +4,34 @@ const stringify = (value) => {
   if (_.isObject(value)) {
     return '[complex value]';
   }
-  return typeof value === 'string' ? `'${value}'` : value;
-};
-
-const getPlainFormat = (value, parent = '') => {
-  switch (value.type) {
-    case 'added':
-      return `Property '${parent}${value.key}' was added with value: ${stringify(value.value)}`;
-    case 'deleted':
-      return `Property '${parent}${value.key}' was removed`;
-    case 'unchanged':
-      return null;
-    case 'changed':
-      return `Property '${parent}${value.key}' was updated. From ${stringify(value.valueBefore)} to ${stringify(value.valueAfter)}`;
-    case 'nested':
-      return value.children.map((val) => getPlainFormat(val, `${parent + value.key}.`))
-        .filter((item) => item !== null).join('\n');
-    default:
-      throw new Error(`Unknown type: ${value.type}`);
+  if (_.isString(value)) {
+    return `'${value}'`;
   }
+  return value;
 };
 
-export default (plain) => `${plain.map((element) => getPlainFormat(element)).join('\n')}`;
+const plain = (diff) => {
+  const iter = (node, path = '') => {
+    const {
+      key, type, value, oldValue, children,
+    } = node;
+    switch (type) {
+      case 'nested':
+        return children.flatMap((child) => iter(child, `${path}${key}.`)).join('\n');
+      case 'added':
+        return `Property '${path}${key}' was added with value: ${stringify(value)}`;
+      case 'removed':
+        return `Property '${path}${key}' was removed`;
+      case 'changed':
+        return `Property '${path}${key}' was updated. From ${stringify(oldValue)} to ${stringify(value)}`;
+      case 'unchanged':
+        return [];
+      default:
+        throw new Error(`Unknown type: ${type}`);
+    }
+  };
+  const result = diff.flatMap((node) => iter(node));
+  return `${result.join('\n')}`;
+};
+
+export default plain;

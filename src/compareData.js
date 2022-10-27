@@ -1,47 +1,25 @@
 import _ from 'lodash';
 
-const compareData = (file1, file2) => {
-  const keys1 = _.keys(file1);
-  const keys2 = _.keys(file2);
-  const sortedKeys = _.sortBy(_.union(keys1, keys2));
-
-  const result = sortedKeys.map((key) => {
-    if (!_.has(file1, key)) {
-      return {
-        key,
-        value: file2[key],
-        type: 'added',
-      };
-    }
-    if (!_.has(file2, key)) {
-      return {
-        key,
-        value: file1[key],
-        type: 'deleted',
-      };
-    }
-    if (_.isObject(file1[key]) && _.isObject(file2[key])) {
+const compareData = (obj1, obj2) => {
+  const keys = [obj1, obj2].flatMap(Object.keys);
+  const unionKeys = _.sortBy(_.union(keys));
+  const nodes = unionKeys.map((key) => {
+    const [value1, value2] = [obj1[key], obj2[key]];
+    if (_.isPlainObject(value1) && _.isPlainObject(value2)) {
       return {
         key,
         type: 'nested',
-        children: compareData(file1[key], file2[key]),
+        children: compareData(value1, value2),
       };
     }
-    if (file1[key] !== file2[key]) {
-      return {
-        key,
-        valueBefore: file1[key],
-        valueAfter: file2[key],
-        type: 'changed',
-      };
-    }
+    if (!Object.hasOwn(obj1, key) && Object.hasOwn(obj2, key)) { return { key, type: 'added', value: value2 }; }
+    if (Object.hasOwn(obj1, key) && !Object.hasOwn(obj2, key)) { return { key, type: 'removed', value: value1 }; }
+    if (value1 === value2) { return { key, type: 'unchanged', value: value1 }; }
     return {
-      key,
-      value: file1[key],
-      type: 'unchanged',
+      key, type: 'changed', value: value2, oldValue: value1,
     };
   });
-  return result;
+  return nodes;
 };
 
 export default compareData;
