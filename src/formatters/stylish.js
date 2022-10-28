@@ -14,34 +14,25 @@ const stringify = (value, depth = 1) => {
   return `{\n${mapKeys.join('\n')}\n  ${makeIndent(depth)}}`;
 };
 
-const stylish = (diff) => {
-  const symbols = {
-    unchanged: ' ',
-    removed: '-',
-    added: '+',
-  };
-  const iter = (node, depth = 1) => {
-    const {
-      key, type, value, oldValue, children,
-    } = node;
-    switch (type) {
-      case 'unchanged':
+const stylish = (innerTree) => {
+  const iter = (tree, depth) => tree.map((node) => {
+    const getValue = (value, sign) => `${makeIndent(depth)}${sign} ${node.key}: ${stringify(value, depth)}\n`;
+    switch (node.type) {
       case 'added':
+        return getValue(node.value, '+');
       case 'removed':
-        return `${makeIndent(depth)}${symbols[type]} ${key}: ${stringify(value, depth)}`;
+        return getValue(node.value, '-');
+      case 'unchanged':
+        return getValue(node.value, ' ');
       case 'changed':
-        return [
-          `${makeIndent(depth)}${symbols.removed} ${key}: ${stringify(oldValue, depth)}`,
-          `${makeIndent(depth)}${symbols.added} ${key}: ${stringify(value, depth)}`,
-        ];
+        return `${getValue(node.oldValue, '-')}${getValue(node.value, '+')}`;
       case 'nested':
-        return `${makeIndent(depth)}  ${key}: {\n${children.flatMap((child) => iter(child, depth + 1)).join('\n')}\n${makeIndent(depth)}  }`;
+        return `${makeIndent(depth)}  ${node.key}: {\n${iter(node.children, depth + 1).join('')}${makeIndent(depth)}  }\n`;
       default:
-        throw new Error(`Unknown type: ${type}`);
+        throw new Error(`This type does not exist: ${node.type}`);
     }
-  };
-  const result = diff.flatMap((node) => iter(node));
-  return `{\n${result.join('\n')}\n}`;
+  });
+  return `{\n${iter(innerTree, 1).join('')}}`;
 };
 
 export default stylish;

@@ -1,37 +1,33 @@
 import _ from 'lodash';
 
 const stringify = (value) => {
-  if (_.isObject(value)) {
+  if (_.isObject(value) && value !== null) {
     return '[complex value]';
   }
-  if (_.isString(value)) {
+  if (_.isString(value) && value !== null) {
     return `'${value}'`;
   }
   return value;
 };
 
-const plain = (diff) => {
-  const iter = (node, path = '') => {
-    const {
-      key, type, value, oldValue, children,
-    } = node;
-    switch (type) {
-      case 'nested':
-        return children.flatMap((child) => iter(child, `${path}${key}.`)).join('\n');
-      case 'added':
-        return `Property '${path}${key}' was added with value: ${stringify(value)}`;
-      case 'removed':
-        return `Property '${path}${key}' was removed`;
-      case 'changed':
-        return `Property '${path}${key}' was updated. From ${stringify(oldValue)} to ${stringify(value)}`;
-      case 'unchanged':
-        return [];
-      default:
-        throw new Error(`Unknown type: ${type}`);
-    }
-  };
-  const result = diff.flatMap((node) => iter(node));
-  return `${result.join('\n')}`;
+const plain = (innerTree) => {
+  const format = (nodes, parent) => nodes
+    .filter((node) => node.type !== 'unchanged')
+    .map((node) => {
+      const property = parent ? `${parent}.${node.key}` : node.key;
+      switch (node.type) {
+        case 'added':
+          return `Property '${property}' was added with value: ${stringify(node.value)}`;
+        case 'removed':
+          return `Property '${property}' was removed`;
+        case 'changed':
+          return `Property '${property}' was updated. From ${stringify(node.oldValue)} to ${stringify(node.value)}`;
+        case 'nested':
+          return `${format(node.children, property)}`;
+        default:
+          throw new Error(`This type does not exist: ${node.type}`);
+      }
+    }).join('\n');
+  return format(innerTree, 0);
 };
-
 export default plain;
