@@ -1,11 +1,14 @@
 import _ from 'lodash';
 
 const stringify = (value) => {
-  if (_.isObject(value) && value !== null) {
+  if (_.isObject(value)) {
     return '[complex value]';
   }
-  if (_.isString(value) && value !== null) {
+  if (_.isString(value)) {
     return `'${value}'`;
+  }
+  if (value === null) {
+    return null;
   }
   return value;
 };
